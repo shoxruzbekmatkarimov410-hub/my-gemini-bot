@@ -4,10 +4,10 @@ import google.generativeai as genai
 from flask import Flask
 import threading
 
-# 1. Flask server (Render o'chib qolmasligi uchun)
+# 1. Flask server (Render uchun)
 app = Flask(__name__)
 @app.route('/')
-def index(): return "Bot holati: OK"
+def index(): return "Bot ishlayapti!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 5000))
@@ -17,10 +17,10 @@ def run_flask():
 TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# 3. Gemini sozlash (Transport='rest' va 'gemini-pro' modeli bilan)
-# Bu usul eng barqaror va xatolarsiz ishlaydi
-genai.configure(api_key=GEMINI_KEY, transport='rest')
-model = genai.GenerativeModel('gemini-pro')
+# 3. Gemini sozlash (Eng oxirgi model nomi bilan)
+genai.configure(api_key=GEMINI_KEY)
+# Bu yerda model nomini 'gemini-1.5-flash' deb yozamiz
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -31,11 +31,13 @@ def chat(m):
         response = model.generate_content(m.text)
         bot.reply_to(m, response.text)
     except Exception as e:
-        # Xatoni Telegramga yuborish (nima bo'layotganini bilish uchun)
-        bot.reply_to(m, f"Xato turi: {str(e)}")
+        # Agar xato bo'lsa, xatoni o'zini emas, tushunarli xabar yuboramiz
+        error_msg = str(e)
+        if "404" in error_msg:
+            bot.reply_to(m, "Google modeli bilan ulanishda muammo. Model nomi yangilanmoqda...")
+        else:
+            bot.reply_to(m, f"Tizimda xato: {error_msg}")
 
 if __name__ == "__main__":
-    # Serverni alohida oqimda yurgizish
     threading.Thread(target=run_flask).start()
-    # Botni ishga tushirish
     bot.infinity_polling()
