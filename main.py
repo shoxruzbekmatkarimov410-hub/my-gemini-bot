@@ -1,45 +1,32 @@
-import os
-import telebot
-import google.generativeai as genai
+import os, telebot, google.generativeai as genai
 from flask import Flask
 import threading
 
-# 1. Flask server (Render uchun)
+# 1. Oddiy server (Render o'chib qolmasligi uchun)
 app = Flask(__name__)
 @app.route('/')
-def index(): return "Bot ishlayapti!"
+def home(): return "Bot ishlayapti!"
 
-def run_flask():
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-
-# 2. Kalitlarni olish
-TOKEN = os.getenv("BOT_TOKEN")
+# 2. Gemini va Botni sozlash
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# 3. Gemini sozlash (v1 versiyani majburiy qilish)
-# transport='rest' va model nomini aniq yozish
-genai.configure(api_key=GEMINI_KEY, transport='rest')
+genai.configure(api_key=GEMINI_KEY)
+# Eng asosiysi - model nomi mana shunday bo'lishi kerak:
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-# BU YERDA MODEL NOMINI O'ZGARTIRDIK - BU HAR QANDAY VERSIYADA BOR
-model = genai.GenerativeModel('gemini-1.0-pro')
+bot = telebot.TeleBot(BOT_TOKEN)
 
-bot = telebot.TeleBot(TOKEN)
-
-@bot.message_handler(func=lambda m: True)
-def chat(m):
+# 3. Xabarlarga javob berish qismi
+@bot.message_handler(func=lambda message: True)
+def echo_all(message):
     try:
-        # Gemini-dan javob olish
-        response = model.generate_content(m.text)
-        if response.text:
-            bot.reply_to(m, response.text)
-        else:
-            bot.reply_to(m, "Kechirasiz, javob topa olmadim.")
+        response = model.generate_content(message.text)
+        bot.reply_to(message, response.text)
     except Exception as e:
-        # Xatoni qisqaroq ko'rsatish
-        bot.reply_to(m, f"Xato: {str(e)[:100]}")
+        bot.reply_to(message, f"Xato: {str(e)}")
 
+# 4. Botni yurgizish
 if __name__ == "__main__":
-    threading.Thread(target=run_flask).start()
+    threading.Thread(target=lambda: app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))).start()
     bot.infinity_polling()
-            
