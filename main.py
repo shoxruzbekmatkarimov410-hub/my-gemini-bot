@@ -1,7 +1,7 @@
 import os, telebot, requests, threading
 from flask import Flask
 
-# 1. Server qismi
+# 1. Server qismi (Render uchun)
 app = Flask(__name__)
 @app.route('/')
 def home(): return "Bot Active"
@@ -11,9 +11,10 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# 3. Gemini bilan to'g'ridan-to'g'ri bog'lanish (Kutubxonasiz)
+# 3. Gemini bilan bog'lanish (Eng barqaror v1 versiyasi)
 def get_ai_response(text):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+    # MUHIM: Bu yerda v1 versiya va flash model ishlatilgan
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": text}]}]}
     
@@ -23,7 +24,8 @@ def get_ai_response(text):
     if "candidates" in res_json:
         return res_json['candidates'][0]['content']['parts'][0]['text']
     else:
-        return f"Xato chiqdi: {res_json}"
+        # Xato bo'lsa, xatoni o'zini qaytaradi (tekshirish uchun)
+        return f"Xato: {res_json}"
 
 # 4. Telegram xabarlari
 @bot.message_handler(func=lambda m: True)
@@ -32,7 +34,7 @@ def chat(m):
         javob = get_ai_response(m.text)
         bot.reply_to(m, javob)
     except Exception as e:
-        bot.reply_to(m, "Ulanishda muammo bo'ldi.")
+        bot.reply_to(m, f"Tizimda xato: {str(e)}")
 
 # 5. Ishga tushirish
 if __name__ == "__main__":
