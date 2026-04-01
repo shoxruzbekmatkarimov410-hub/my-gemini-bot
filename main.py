@@ -17,9 +17,10 @@ def run_flask():
 TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# 3. Gemini sozlash (Eng oxirgi model nomi bilan)
+# 3. Gemini sozlash
 genai.configure(api_key=GEMINI_KEY)
-# Bu yerda model nomini 'gemini-1.5-flash' deb yozamiz
+
+# BU YERDA MODELNI TO'G'RI TANLASH (Eng ishonchli usul)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 bot = telebot.TeleBot(TOKEN)
@@ -31,12 +32,13 @@ def chat(m):
         response = model.generate_content(m.text)
         bot.reply_to(m, response.text)
     except Exception as e:
-        # Agar xato bo'lsa, xatoni o'zini emas, tushunarli xabar yuboramiz
-        error_msg = str(e)
-        if "404" in error_msg:
-            bot.reply_to(m, "Google modeli bilan ulanishda muammo. Model nomi yangilanmoqda...")
-        else:
-            bot.reply_to(m, f"Tizimda xato: {error_msg}")
+        # Xato bo'lsa, modelni boshqa nom bilan qayta urinib ko'radi
+        try:
+            alt_model = genai.GenerativeModel('gemini-pro')
+            response = alt_model.generate_content(m.text)
+            bot.reply_to(m, response.text)
+        except:
+            bot.reply_to(m, f"Xato: {str(e)}")
 
 if __name__ == "__main__":
     threading.Thread(target=run_flask).start()
