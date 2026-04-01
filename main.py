@@ -17,9 +17,9 @@ def run_flask():
 TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# 3. Gemini sozlash (Model nomini 'gemini-pro' qildik - bu aniq ishlaydi!)
+# 3. Gemini sozlash (Model nomini 'gemini-1.5-flash-latest' qildik - bu eng yangisi!)
 genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -30,7 +30,7 @@ def chat(m):
         response = model.generate_content(m.text)
         bot.reply_to(m, response.text)
     except Exception as e:
-        # Xatoni Telegramga yuborish (nima bo'layotganini bilish uchun)
+        # Xatoni Telegramga yuborish
         bot.reply_to(m, f"Xato turi: {str(e)}")
 
 if __name__ == "__main__":
@@ -38,4 +38,6 @@ if __name__ == "__main__":
     threading.Thread(target=run_flask).start()
     # Botni ishga tushirish
     bot.infinity_polling()
-                                          
+
+
+    
