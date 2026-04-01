@@ -17,7 +17,7 @@ def run_flask():
 TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# 3. Gemini sozlash (Model nomini 'gemini-pro' qildik)
+# 3. Gemini sozlash (Model nomini 'gemini-pro' qildik - bu aniq ishlaydi!)
 genai.configure(api_key=GEMINI_KEY)
 model = genai.GenerativeModel('gemini-pro')
 
@@ -30,7 +30,7 @@ def chat(m):
         response = model.generate_content(m.text)
         bot.reply_to(m, response.text)
     except Exception as e:
-        # Xatoni Telegramga yuborish
+        # Xatoni Telegramga yuborish (nima bo'layotganini bilish uchun)
         bot.reply_to(m, f"Xato turi: {str(e)}")
 
 if __name__ == "__main__":
@@ -38,3 +38,4 @@ if __name__ == "__main__":
     threading.Thread(target=run_flask).start()
     # Botni ishga tushirish
     bot.infinity_polling()
+                                          
